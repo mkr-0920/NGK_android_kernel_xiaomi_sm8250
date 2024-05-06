@@ -7,19 +7,28 @@ SUBARCH="arm64"
 DEFCONFIG=nogravity-${PHONE}_defconfig
 COMPILER=clang
 LINKER="lld"
-COMPILERDIR="/media/pierre/Expension/Android/PocoX3Pro/Kernels/Proton-Clang"
+COMPILERDIR="/home/mkr/toolchains/proton-clang"
 
 # Copy gpu dtsi
 cp arch/arm64/boot/dts/vendor/qcom/kona-v2-gpu-xxxx/kona-v2-gpu-apollo.dtsi arch/arm64/boot/dts/vendor/qcom/kona-v2-gpu.dtsi
 
 # Copy touch fw
+mkdir -p drivers/input/touchscreen/focaltech_3658u/include/firmware/
+mkdir -p drivers/input/touchscreen/focaltech_spi/include/firmware/
+mkdir -p drivers/input/touchscreen/focaltech_touch/include/firmware/
+mkdir -p drivers/input/touchscreen/focaltech_touch/include/pramboot/
+
 cp touch_fw/* drivers/input/touchscreen/focaltech_3658u/include/firmware/
 cp touch_fw/* drivers/input/touchscreen/focaltech_spi/include/firmware/
 cp touch_fw/* drivers/input/touchscreen/focaltech_touch/include/firmware/
 cp touch_fw/* drivers/input/touchscreen/focaltech_touch/include/pramboot/
 
 # Cleanup output
-rm -rf out/outputs/${PHONE}/*
+rm -rf out/
+
+# kernelsu
+rm -rf KernelSU/
+curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
 
 # Export shits
 export KBUILD_BUILD_USER=Pierre2324
@@ -65,7 +74,7 @@ OBJCOPY=llvm-objcopy \
 OBJDUMP=llvm-objdump \
 STRIP=llvm-strip \
 ld-name=${LINKER} \
-KBUILD_COMPILER_STRING="Proton Clang" \
+KBUILD_COMPILER_STRING="proton-clang" \
 Image.gz-dtb dtbo.img
 }
 
@@ -136,7 +145,7 @@ miui_fix_fod()
 
 # Make defconfig
 
-make O=out ARCH=${ARCH} ${DEFCONFIG}
+make O=out CC=clang ARCH=${ARCH} ${DEFCONFIG}
 if [ $? -ne 0 ]
 then
     echo "Build failed"
@@ -165,7 +174,7 @@ else
     cp out/arch/arm64/boot/dtbo.img out/outputs/${PHONE}/dtbo.img
     cp out/arch/arm64/boot/Image.gz out/outputs/${PHONE}/Image.gz
     #MIUI dtbo
-    rm out/outputs/${PHONE}/${PHONE}_dtbo-miui.img
+    #rm out/outputs/${PHONE}/${PHONE}_dtbo-miui.img
     miui_fix_dimens
     miui_fix_fps
     miui_fix_dfps
